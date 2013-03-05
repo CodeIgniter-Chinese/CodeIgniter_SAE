@@ -58,11 +58,9 @@ class SAE_Image_lib {
 	public $error_msg			= array();
 	public $wm_use_drop_shadow	= FALSE;
 	public $wm_use_truetype	= FALSE;
-	
-	// for sae
-	public $sae_storage = null;
-	public $sae_tmpfile;
 
+	var $CI;
+	
 	/**
 	 * Constructor
 	 *
@@ -70,15 +68,17 @@ class SAE_Image_lib {
 	 * @return	void
 	 */
 	public function __construct($props = array())
-	{
-		// for sae
-		if (class_exists('SaeKV'))
-			$this->sae_storage = new SaeStorage();
+	{	
+		// Assign the main CI object to $this->CI
+		// and load the storage helper since we use it a lot
+		$this->CI =& get_instance();
+		$this->CI->load->helper('storage');
+		
 		if (count($props) > 0)
 		{
 			$this->initialize($props);
 		}
-
+		
 		log_message('debug', "Image Lib Class Initialized");
 	}
 
@@ -163,21 +163,8 @@ class SAE_Image_lib {
 		 * full server path in order to more reliably read it.
 		 *
 		 */
-		if (class_exists('SaeKV'))
-		{
-			$full_source_path = str_replace("\\", "/", $this->source_image);
-		}
-		else
-		{
-			if (function_exists('realpath') AND @realpath($this->source_image) !== FALSE)
-			{
-				$full_source_path = str_replace("\\", "/", realpath($this->source_image));
-			}
-			else
-			{
-				$full_source_path = $this->source_image;
-			}
-		}
+		 //SAE
+		$full_source_path = str_replace("\\", "/", $this->source_image);
 
 		$x = explode('/', $full_source_path);
 		$this->source_image = end($x);
@@ -212,22 +199,8 @@ class SAE_Image_lib {
 			}
 			else
 			{
-				// for sae
-				if (class_exists('SaeKV'))
-				{
-					$full_dest_path = str_replace("\\", "/", $this->new_image);
-				}
-				else
-				{
-					if (function_exists('realpath') AND @realpath($this->new_image) !== FALSE)
-					{
-						$full_dest_path = str_replace("\\", "/", realpath($this->new_image));
-					}
-					else
-					{
-						$full_dest_path = $this->new_image;
-					}
-				}
+				//SAE
+				$full_dest_path = str_replace("\\", "/", $this->new_image);
 
 				// Is there a file name?
 				if ( ! preg_match("#\.(jpg|jpeg|gif|png)$#i", $full_dest_path))
@@ -323,15 +296,8 @@ class SAE_Image_lib {
 
 		if ($this->wm_overlay_path != '')
 		{
-			// for sae
-			if (class_exists('SaeKV'))
-			{
-				$this->wm_overlay_path = str_replace("\\", "/", $this->wm_overlay_path);
-			}
-			else
-			{
-				$this->wm_overlay_path = str_replace("\\", "/", realpath($this->wm_overlay_path));
-			}
+			// SAE
+			$this->wm_overlay_path = str_replace("\\", "/", $this->wm_overlay_path);
 		}
 
 		if ($this->wm_shadow_color != '')
@@ -469,18 +435,9 @@ class SAE_Image_lib {
 			{
 				if ($this->source_image != $this->new_image)
 				{
-					if (class_exists('SaeKV'))
-					{
-						$img = $this->sae_storage_read($this->full_src_path);
-						$this->sae_storage_write($this->full_dst_path,$img);
-					}
-					else
-					{
-						if (@copy($this->full_src_path, $this->full_dst_path))
-						{
-							@chmod($this->full_dst_path, FILE_WRITE_MODE);
-						}
-					}
+					//SAE
+					$img = s_read($this->full_src_path);
+					s_write($this->full_dst_path,$img);
 				}
 
 				return TRUE;
@@ -561,10 +518,10 @@ class SAE_Image_lib {
 		imagedestroy($dst_img);
 		imagedestroy($src_img);
 
+		// SAE
 		// Set the file to 777
-		if (!class_exists('SaeKV'))
-			@chmod($this->full_dst_path, FILE_WRITE_MODE);
-
+		//@chmod($this->full_dst_path, FILE_WRITE_MODE);
+		
 		return TRUE;
 	}
 
@@ -1156,11 +1113,9 @@ class SAE_Image_lib {
 		if ($image_type == '')
 			$image_type = $this->image_type;
 		
-		if (class_exists('SaeKV'))
-		{
-			$x = explode('/', $this->full_src_path);
-			$filename = end($x);
-		}
+		//SAE
+		$x = explode('/', $this->full_src_path);
+		$filename = end($x);
 
 		switch ($image_type)
 		{
@@ -1170,12 +1125,8 @@ class SAE_Image_lib {
 							$this->set_error(array('imglib_unsupported_imagecreate', 'imglib_gif_not_supported'));
 							return FALSE;
 						}
-						if (class_exists('SaeKV'))
-						{
-							return imagecreatefromgif(SAE_TMP_PATH.$filename);
-						}
-						else
-							return imagecreatefromgif($path);
+						//SAE
+						return imagecreatefromgif(SAE_TMP_PATH.$filename);
 				break;
 			case 2 :
 						if ( ! function_exists('imagecreatefromjpeg'))
@@ -1183,12 +1134,8 @@ class SAE_Image_lib {
 							$this->set_error(array('imglib_unsupported_imagecreate', 'imglib_jpg_not_supported'));
 							return FALSE;
 						}
-						if (class_exists('SaeKV'))
-						{
-							return imagecreatefromjpeg(SAE_TMP_PATH.$filename);
-						}
-						else
-							return imagecreatefromjpeg($path);
+						//SAE
+						return imagecreatefromjpeg(SAE_TMP_PATH.$filename);
 				break;
 			case 3 :
 						if ( ! function_exists('imagecreatefrompng'))
@@ -1196,12 +1143,8 @@ class SAE_Image_lib {
 							$this->set_error(array('imglib_unsupported_imagecreate', 'imglib_png_not_supported'));
 							return FALSE;
 						}
-						if (class_exists('SaeKV'))
-						{
-							return imagecreatefrompng(SAE_TMP_PATH.$filename);
-						}
-						else
-							return imagecreatefrompng($path);
+						//SAE
+						return imagecreatefrompng(SAE_TMP_PATH.$filename);
 				break;
 
 		}
@@ -1224,11 +1167,10 @@ class SAE_Image_lib {
 	 */
 	function image_save_gd($resource)
 	{
-		if (class_exists('SaeKV'))
-		{
-			$x = explode('/', $this->full_dst_path);
-			$file_name = end($x);
-		}
+		//SAE
+		$x = explode('/', $this->full_dst_path);
+		$file_name = end($x);
+
 		switch ($this->image_type)
 		{
 			case 1 :
@@ -1237,8 +1179,8 @@ class SAE_Image_lib {
 							$this->set_error(array('imglib_unsupported_imagecreate', 'imglib_gif_not_supported'));
 							return FALSE;
 						}
-
-						if ( ! @imagegif($resource, class_exists('SaeKV') ? SAE_TMP_PATH.$file_name : $this->full_dst_path))
+						//SAE
+						if ( ! @imagegif($resource, SAE_TMP_PATH.$file_name))
 						{
 							$this->set_error('imglib_save_failed');
 							return FALSE;
@@ -1250,8 +1192,8 @@ class SAE_Image_lib {
 							$this->set_error(array('imglib_unsupported_imagecreate', 'imglib_jpg_not_supported'));
 							return FALSE;
 						}
-
-						if ( ! @imagejpeg($resource, class_exists('SaeKV') ? SAE_TMP_PATH.$file_name : $this->full_dst_path, $this->quality))
+						//SAE
+						if ( ! @imagejpeg($resource, SAE_TMP_PATH.$file_name, $this->quality))
 						{
 							$this->set_error('imglib_save_failed');
 							return FALSE;
@@ -1263,8 +1205,8 @@ class SAE_Image_lib {
 							$this->set_error(array('imglib_unsupported_imagecreate', 'imglib_png_not_supported'));
 							return FALSE;
 						}
-
-						if ( ! @imagepng($resource, class_exists('SaeKV') ? SAE_TMP_PATH.$file_name : $this->full_dst_path))
+						//SAE
+						if ( ! @imagepng($resource, SAE_TMP_PATH.$file_name))
 						{
 							$this->set_error('imglib_save_failed');
 							return FALSE;
@@ -1276,10 +1218,8 @@ class SAE_Image_lib {
 				break;
 		}
 		
-		if (class_exists('SaeKV'))
-		{
-			$this->sae_storage_write($this->full_dst_path, file_get_contents(SAE_TMP_PATH.$file_name));
-		}
+		//写入SAE的Storage
+		s_write($this->full_dst_path, file_get_contents(SAE_TMP_PATH.$file_name));
 
 		return TRUE;
 	}
@@ -1378,37 +1318,19 @@ class SAE_Image_lib {
 		if ($path == '')
 			$path = $this->full_src_path;
 		
-		if (class_exists('SaeKV'))
+		//SAE
+		if ( s_file_exists($path) === FALSE)
 		{
-			if ( $this->sae_storage_exists($path) === false)
-			{
-				$this->set_error('imglib_invalid_path');
-				return FALSE;
-			}
-		}
-		else
-		{
-			if ( ! file_exists($path))
-			{
-				$this->set_error('imglib_invalid_path');
-				return FALSE;
-			}
+			$this->set_error('imglib_invalid_path');
+			return FALSE;
 		}
 
-		// sae 要先读出来写入临时目录，再获取大小
-		if (class_exists('SaeKV'))
-		{
-			$x = explode('/', $path);
-			$img_name = end($x);
-			file_put_contents(SAE_TMP_PATH.$img_name, $this->sae_storage_read($path));
-			$vals = @getimagesize(SAE_TMP_PATH.$img_name);
-		}
-		else
-		{
-			$vals = @getimagesize($path);
-		}
+		// SAE 要先读出来写入临时目录，再获取大小
+		$x = explode('/', $path);
+		$img_name = end($x);
+		file_put_contents(SAE_TMP_PATH.$img_name, s_read($path));
+		$vals = @getimagesize(SAE_TMP_PATH.$img_name);
 		
-
 		$types = array(1 => 'gif', 2 => 'jpeg', 3 => 'png');
 
 		$mime = (isset($types[$vals['2']])) ? 'image/'.$types[$vals['2']] : 'image/jpg';
@@ -1601,59 +1523,7 @@ class SAE_Image_lib {
 		}
 
 		return $str;
-	}
-	
-	/**
-	 * 根据文件的相对地址解析sae storage元素
-	 * 返回一个数组，包含domain和相对路径
-	 * 
-	 * array('domain'=>'xxxx','path'=>'yyyyy');
-	 * 
-	 * @param string $path 完整地址，包含文件名
-	 */
-	protected function get_storage_info($path)
-	{
-		$x = explode('/', $path);
-		$sae_domain = $path = '';
-		foreach ($x as $k => $v)
-		{
-			if ($v != '')
-			{
-				if (!$sae_domain != '')
-					$sae_domain = $v;
-				else
-					$path .= ($path == '') ? $v : '/'.$v;
-			}
-		}
-		return array('domain'=>$sae_domain,'path'=>$path);
-	}
-	
-	public function sae_storage_exists($file)
-	{
-		$storage_info = $this->get_storage_info($file);
-		return $this->sae_storage->fileExists($storage_info['domain'],$storage_info['path']);
-	}
-	
-	/**
-	 * 读storage文件
-	 * @param string $path
-	 */
-	public function sae_storage_read($path)
-	{
-		$storage_info = $this->get_storage_info($path);
-		return $this->sae_storage->read($storage_info['domain'],$storage_info['path']);
-	}
-	
-	/**
-	 * 写storage文件
-	 * @param string $path
-	 */
-	public function sae_storage_write($path,$content)
-	{
-		$storage_info = $this->get_storage_info($path);
-		return $this->sae_storage->write($storage_info['domain'],$storage_info['path'],$content);
-	}
-
+	}	
 }
 // END Image_lib Class
 

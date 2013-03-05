@@ -19,6 +19,7 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
+		$this->load->helper('url');
 		$this->load->view('welcome_message');
 	}
 	
@@ -91,6 +92,27 @@ class Welcome extends CI_Controller {
 	//修改日志和代码示例
 	public function log(){
 		$this->load->view('welcome_log');
+	}
+		
+	//图像处理 测试
+	/*public function imagetest(){
+		$config['source_image'] = 'public/test/old.jpg';
+		 $config['new_image'] = 'public/test/new.jpg';
+		 $config['maintain_ratio'] = TRUE;
+		 $config['width'] = 250;
+		 $config['height'] = 100;
+
+		 $this->load->library('image_lib', $config); 
+		 $this->image_lib->resize();
+
+	}*/
+		
+	//数据库手动缓存测试 
+	public function dbcache(){
+		$this->load->database();
+		$this->db->cache_on();
+		$query = $this->db->query("SELECT * FROM test");
+		print_r($query);
 	}
 		
 }

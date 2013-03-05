@@ -109,9 +109,13 @@ class CI_DB_driver {
 			return TRUE;
 		}
 
+		
+		// SAE读写分离修改 仅在执行SQL语句时才确定是否进行数据库连接
+		
 		// ----------------------------------------------------------------
-
+		
 		// Connect to the database and set the connection ID
+		/*
 		$this->conn_id = ($this->pconnect == FALSE) ? $this->db_connect() : $this->db_pconnect();
 
 		// No connection resource?  Throw an error
@@ -152,6 +156,7 @@ class CI_DB_driver {
 				return TRUE;
 			}
 		}
+		*/
 
 		return TRUE;
 	}
@@ -424,8 +429,8 @@ class CI_DB_driver {
 
 		if ( ! class_exists($driver))
 		{
-			include_once(BASEPATH.'database/DB_result.php');
-			include_once(BASEPATH.'database/drivers/'.$this->dbdriver.'/'.$this->dbdriver.'_result.php');
+			include_once(APPPATH.'database/DB_result.php');
+			include_once(APPPATH.'database/drivers/'.$this->dbdriver.'/'.$this->dbdriver.'_result.php');
 		}
 
 		return $driver;
@@ -447,9 +452,52 @@ class CI_DB_driver {
 	{
 		if ( ! $this->conn_id)
 		{
-			$this->initialize();
-		}
+			// SAE 读写分离 判断SQL语句类型
+			$_is_write = $this->is_write_type($sql);
+			
+			// ----------------------------------------------------------------
+			
+			// Connect to the database and set the connection ID
+			$this->conn_id = ($this->pconnect == FALSE) ? $this->db_connect($_is_write) : $this->db_pconnect();
 
+			// No connection resource?  Throw an error
+			if ( ! $this->conn_id)
+			{
+				log_message('error', 'Unable to connect to the database');
+
+				if ($this->db_debug)
+				{
+					$this->display_error('db_unable_to_connect');
+				}
+				return FALSE;
+			}
+
+			// ----------------------------------------------------------------
+
+			// Select the DB... assuming a database name is specified in the config file
+			if ($this->database != '')
+			{
+				if ( ! $this->db_select())
+				{
+					log_message('error', 'Unable to select database: '.$this->database);
+
+					if ($this->db_debug)
+					{
+						$this->display_error('db_unable_to_select', $this->database);
+					}
+					return FALSE;
+				}
+				else
+				{
+					// We've selected the DB. Now we set the character set
+					if ( ! $this->db_set_charset($this->char_set, $this->dbcollat))
+					{
+						return FALSE;
+					}
+				}
+			}
+			
+		}
 		return $this->_execute($sql);
 	}
 
@@ -1121,7 +1169,7 @@ class CI_DB_driver {
 
 		if ( ! class_exists('CI_DB_Cache'))
 		{
-			if ( ! @include(BASEPATH.'database/DB_cache.php'))
+			if ( ! @include(APPPATH.'database/DB_cache.php'))
 			{
 				return $this->cache_off();
 			}
@@ -1183,7 +1231,7 @@ class CI_DB_driver {
 
 		foreach ($trace as $call)
 		{
-			if (isset($call['file']) && strpos($call['file'], BASEPATH.'database') === FALSE)
+			if (isset($call['file']) && strpos($call['file'], APPPATH.'database') === FALSE)
 			{
 				// Found it - use a relative path for safety
 				$message[] = 'Filename: '.str_replace(array(BASEPATH, APPPATH), '', $call['file']);

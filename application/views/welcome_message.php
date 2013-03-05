@@ -72,7 +72,7 @@
 	<div id="body">
 		<p>欢迎使用CodeIgniter 2.1.3 For SAE</p>
 
-		<p>此CI框架适应SAE环境，主要修改如下：&nbsp;&nbsp; <a href="/welcome/log">更多修改日志&amp;代码示例</a></p>
+		<p>此CI框架适应SAE环境，主要修改如下：&nbsp;&nbsp; <?=anchor('welcome/log','更多修改日志&amp;代码示例')?></p>
 		<code>
 		1.Mysql数据库 进行了读写的主从分离（主库写、从库读）<br>
 		2.数据缓存 与 页面缓存 支持memcache和kvdb两种方式<br>
@@ -81,14 +81,18 @@
 		5.图像处理类 仅支持GD2函数<br>
 		6.验证码类 使用原生SAE的Vcode类<br>
 		7.日志类 使用原生SAE日志中心<br>
-		8.URL重写，隐藏 index.php
+		</code>
+		
+		<p>若需隐藏index.php，在config.yaml中添加以下代码，且修改配置文件 $config['index_page'] = '';</p>
+		<code>
+			handle:<br>&nbsp;&nbsp;- rewrite: if(!is_dir() &amp;&amp; !is_file() &amp;&amp; path~"/") goto "/index.php/%{QUERY_STRING}"
 		</code>
 
 		<p>测试页面</p>
 		<code>
-			<a href="/welcome/cache" target="_blank">数据缓存</a>&nbsp;&nbsp;
-			<a href="/upload/index" target="_blank">文件上传</a>&nbsp;&nbsp;
-			<a href="/welcome/vcode" target="_blank">验证码</a>&nbsp;&nbsp;
+			<?=anchor('welcome/cache','数据缓存',array('target'=>'_blank'))?>&nbsp;&nbsp;
+			<?=anchor('upload/index','文件上传',array('target'=>'_blank'))?>&nbsp;&nbsp;
+			<?=anchor('welcome/vcode','验证码',array('target'=>'_blank'))?>&nbsp;&nbsp;
 		</code>
 		
 		<p>CI手册</p>
@@ -105,7 +109,7 @@
 		</code>
 	</div>
 
-	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>
+	<p class="footer"><a href="mailto:jiangzhaowei@outlook.com">联系开发者</a>&nbsp;&nbsp;Page rendered in <strong>{elapsed_time}</strong> seconds</p>
 </div>
 
 </body>

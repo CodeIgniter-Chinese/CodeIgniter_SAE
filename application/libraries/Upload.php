@@ -53,13 +53,12 @@ class SAE_Upload {
 	public $client_name				= '';
 
 	protected $_file_name_override	= '';
-	
-	//SAE Storage对象
-	private $_sae_storage = NULL;
-	
+		
 	//SAE 获得最终文件URL
 	protected $sae_storage_fileurl;
-       
+    
+	var $CI;
+	
 	/**
 	 * Constructor
 	 *
@@ -67,10 +66,16 @@ class SAE_Upload {
 	 */
 	public function __construct($props = array())
 	{
+		// Assign the main CI object to $this->CI
+		// and load the storage helper since we use it a lot
+		$this->CI =& get_instance();
+		$this->CI->load->helper('storage');
+		
 		if (count($props) > 0)
 		{
 			$this->initialize($props);
 		}
+		
 		log_message('debug', "Upload Class Initialized");
 		
 	}
@@ -85,7 +90,6 @@ class SAE_Upload {
 	 */
 	public function initialize($config = array())
 	{
-		$this->_sae_storage = new SaeStorage();
 		$defaults = array(
 							'max_size'			=> 0,
 							'max_width'			=> 0,
@@ -308,8 +312,7 @@ class SAE_Upload {
 				return FALSE;
 			}
 		}
-
-		/*
+		/* 
 		 * Move the file to the final destination
 		 * To deal with different server configurations
 		 * we'll attempt to use copy() first.  If that fails
@@ -325,9 +328,10 @@ class SAE_Upload {
 				return FALSE;
 			}
 		}
-		 */
+		*/
+		 
 		//SAE 写入Storage， 返回文件url地址
-		$save_file = $this->_s_write( $this->upload_path.$this->file_name, file_get_contents($this->file_temp));
+		$save_file = s_write( $this->upload_path.$this->file_name, file_get_contents($this->file_temp));
 		if($save_file === FALSE){
 			return FALSE;
 		}
@@ -338,43 +342,11 @@ class SAE_Upload {
 		 * file was an image).  We use this information
 		 * in the "data" function.
 		 */
-         //SAE 
 		$this->set_image_properties($save_file);
 
 		return TRUE;
 	}
 
-	// --------------------------------------------------------------------
-	
-	/**
-	 * Write Data to Storage
-	 *
-	 * 上传成功则返回文件的下载url, 否则返回false
-	 * related to the upload, allowing the developer easy access in one array.
-	 *
-	 * @return string 写入成功时返回该文件的下载地址，否则返回false
-	 */
-	
-	protected function _s_write($file_path, $file_data)
-	{
-		$tmp_index = strpos( $file_path , '/' );
-		return $this->_sae_storage->write( substr($file_path,0,$tmp_index) , substr($file_path,$tmp_index+1) , $file_data );
-	}
-	
-	// --------------------------------------------------------------------
-	
-	/**
-     * 检查文件是否存在
-     *
-     * @param string
-     * @return bool 
-     */
-	protected function _s_file_exists($path, $file_name)
-	{
-		$tmp_index = strpos( $path , '/' );
-		return $this->_sae_storage->fileExists( substr($path,0,$tmp_index) , substr($path,$tmp_index+1).$file_name );
-	}
-	
 	// --------------------------------------------------------------------
 
 	/**
@@ -440,8 +412,8 @@ class SAE_Upload {
 			mt_srand();
 			$filename = md5(uniqid(mt_rand())).$this->file_ext;
 		}
-		//SAE 判断文件是否存在        
-		if( ! $this->_s_file_exists($path, $filename) ){
+		//SAE 判断文件是否存在
+		if( ! s_file_exists($path.$filename) ){
 			return $filename;
 		}
 
@@ -450,7 +422,7 @@ class SAE_Upload {
 		$new_filename = '';
 		for ($i = 1; $i < 100; $i++)
 		{
-			if ( ! $this->_s_file_exists($path, $filename.$i.$this->file_ext))
+			if ( ! s_file_exists($path.$filename.$i.$this->file_ext))
 			{
 				$new_filename = $filename.$i.$this->file_ext;
 				break;

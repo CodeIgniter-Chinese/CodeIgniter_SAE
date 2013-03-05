@@ -7,13 +7,16 @@ https://github.com/wkii/CodeIgniter-for-SAE
 -----------------------------------------------------------
 支持主从数据库 读写分离
 -----------------------------------------------------------
-1.精简 system\database\drivers 仅留下mysql
-2.修改配置 application\config\database.php，适应SAE环境
-3.修改数据库驱动 system\database\DB_driver.php 
+1.使用扩展Loader形式, 加载适配SAE的驱动 application\core\SAE_Loader.php
+2.精简数据库驱动 application\database\drivers 仅留下mysql
+3.修改配置 application\config\database.php，适应SAE环境
+4.修改数据库驱动 application\database\DB_driver.php 
    修改初始化和simple_query函数。自动判断SQL语句的读或写，进行连接主或从数据库。
-4.修改mysql驱动 system\database\drivers\mysql\mysql_driver.php
+5.修改mysql驱动 application\database\drivers\mysql\mysql_driver.php
    修改db_connect()函数，使其支持 连接的主从数据库。 
- 
+6.修改数据库缓存驱动, 使用KVDB进行缓存 application\database\DB_cache.php
+	修改write, read 和 delete 函数, 使其支持KVDB缓存. 
+	
 -----------------------------------------------------------
 缓存类   支持memcache和kvdb
 -----------------------------------------------------------
@@ -22,7 +25,6 @@ https://github.com/wkii/CodeIgniter-for-SAE
 2.添加kvdb驱动   application\libraries\Cache\drivers\Cache_kvdb.php
 3.删除文件缓存
 4.删除apc缓存
-5.原生CI的 system\libraries下Cache文件夹可删除
  
 使用示例：
 $this->load->driver('cache');
@@ -155,7 +157,27 @@ $this->load->helper('captcha');
 $cap = create_captcha();
 echo $cap['word']; //验证码答案 (大写 数字)
 echo $cap['image']; //验证码图片URL ( 80*20 )
- 
+
+-----------------------------------------------------------
+文件辅助类
+-----------------------------------------------------------
+由于SAE下不支持写操作, 所以禁用 涉及写操作的 write 和 delete 函数
+application\helpers\file_helper.php
+
+-----------------------------------------------------------
+扩展 Storage辅助类
+-----------------------------------------------------------
+新增 application\helpers\storage_helper.php 辅助类, 提供常用对Storage的读写操作 (另此辅助类 同时服务于 application\libraries下的 Image_lib 和 Upload)
+写操作: s_write 
+读操作: s_read
+删除操作: s_delete
+更多参考源码 application\helpers\storage_helper.php
+
+使用示例：
+$this->load->helper('storage'); //加载storage辅助类
+$data = 'hello world';
+s_write('public/test.txt', $data); //写入到domain为public下的 test.txt. 支持文件夹, 例如 'public/dir/test.txt'
+
 ----------------------------------------------------------- 
 日志类
 -----------------------------------------------------------
@@ -174,11 +196,3 @@ SAE应用管理的日志中心, 选择"debug"中进行查看.
 zip类
 迁移类
 FTP类 
-
------------------------------------------------------------
-如果有bug或交流 
-欢迎联系 jiangzhaowei@outlook.com
-如果你想拿去二次修改，希望保留原作者信息
-
-本人新手 可能很多写得不太规范，十分乐意接受意见和建议~
-谢谢

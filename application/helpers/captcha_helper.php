@@ -51,4 +51,4 @@ if ( ! function_exists('create_captcha'))
 // ------------------------------------------------------------------------
 
 /* End of file captcha_helper.php */
-/* Location: ./application/heleprs/captcha_helper.php */
+/* Location: ./application/helpers/captcha_helper.php */

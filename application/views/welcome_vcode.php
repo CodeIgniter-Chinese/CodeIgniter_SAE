@@ -81,7 +81,7 @@
 		
 		<p>&nbsp;</p>
 		
-		<p><a href="/welcome/index">返回首页</a></p>
+		<p><a href="/">返回首页</a></p>
 	</div>
 
 	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>

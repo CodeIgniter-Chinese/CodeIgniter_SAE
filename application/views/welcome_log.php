@@ -78,12 +78,15 @@
 			-----------------------------------------------------------<br>
 			支持主从数据库 读写分离<br>
 			-----------------------------------------------------------<br>
-			1.精简 system\database\drivers 仅留下mysql<br>
-			2.修改配置 application\config\database.php，适应SAE环境<br>
-			3.修改数据库驱动 system\database\DB_driver.php <br>
-			   修改初始化和simple_query函数。自动判断SQL语句的读或写，进行连接主或从数据库。<br>
-			4.修改mysql驱动 system\database\drivers\mysql\mysql_driver.php<br>
-			   修改db_connect()函数，使其支持 连接的主从数据库。 <br>
+			1.使用扩展Loader形式, 加载适配SAE的驱动 application\core\SAE_Loader.php<br>
+			2.精简数据库驱动 application\database\drivers 仅留下mysql<br>
+			3.修改配置 application\config\database.php，适应SAE环境<br>
+			4.修改数据库驱动 application\database\DB_driver.php <br>
+			&nbsp;&nbsp;修改初始化和simple_query函数。自动判断SQL语句的读或写，进行连接主或从数据库。<br>
+			5.修改mysql驱动 application\database\drivers\mysql\mysql_driver.php<br>
+			&nbsp;&nbsp;修改db_connect()函数，使其支持 连接的主从数据库。 <br>
+			6.修改数据库缓存驱动, 使用KVDB进行缓存 application\database\DB_cache.php<br>
+			&nbsp;&nbsp;修改write, read 和 delete 函数, 使其支持KVDB缓存. <br>
 			 <br>
 			-----------------------------------------------------------<br>
 			缓存类   支持memcache和kvdb<br>
@@ -237,6 +240,28 @@
 			echo $cap['image']; //验证码图片URL ( 80*20 )
 			</code>
 			 <br>
+			 -----------------------------------------------------------<br>
+			文件辅助类<br>
+			-----------------------------------------------------------<br>
+			由于SAE下不支持写操作, 所以禁用涉及写操作的 write 和 delete 函数<br>
+			application\helpers\file_helper.php<br>
+			<br>
+			-----------------------------------------------------------<br>
+			扩展 Storage辅助类<br>
+			-----------------------------------------------------------<br>
+			新增 application\helpers\storage_helper.php 辅助类, 提供常用对Storage的读写操作 (另此辅助类 同时服务于 application\libraries下的 Image_lib 和 Upload)<br>
+			写操作: s_write <br>
+			读操作: s_read<br>
+			删除操作: s_delete<br>
+			更多参考源码 application\helpers\storage_helper.php<br>
+			<br>
+			使用示例：
+			<code>
+			$this->load->helper('storage'); //加载storage辅助类<br>
+			$data = 'hello world';<br>
+			s_write('public/test.txt', $data); //写入到domain为public下的 test.txt. 支持文件夹, 例如 'public/dir/test.txt'
+			</code>
+			<br>
 			----------------------------------------------------------- <br>
 			日志类<br>
 			-----------------------------------------------------------<br>
@@ -259,7 +284,7 @@
 			FTP类 <br>
 		</p>
 		<p>&nbsp;</p>
-		<p><a href="/welcome/index">返回首页</a></p>
+		<p><a href="/">返回首页</a></p>
 	</div>
 
 	<p class="footer">Page rendered in <strong>{elapsed_time}</strong> seconds</p>

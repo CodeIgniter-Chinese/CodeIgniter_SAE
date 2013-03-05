@@ -63,14 +63,23 @@ class CI_DB_mysql_driver extends CI_DB {
 	 * @access	private called by the base class
 	 * @return	resource
 	 */
-	function db_connect()
+	function db_connect( $is_write = TRUE )
 	{
+		$_hostname = '';
 		if ($this->port != '')
 		{
-			$this->hostname .= ':'.$this->port;
+			// SAE 主从数据库 设置读写分离
+			if( $is_write || empty($this->hostname_s)  )	// 主数据库负责写入
+			{
+				$_hostname = $this->hostname.':'.$this->port;
+			}
+			else
+			{	
+				$_hostname = $this->hostname_s.':'.$this->port;	// 从数据库负责读取
+			}	
 		}
 
-		return @mysql_connect($this->hostname, $this->username, $this->password, TRUE);
+		return @mysql_connect($_hostname, $this->username, $this->password, TRUE);
 	}
 
 	// --------------------------------------------------------------------
