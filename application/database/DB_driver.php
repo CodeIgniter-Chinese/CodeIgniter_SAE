@@ -43,6 +43,7 @@ class CI_DB_driver {
 	var $port			= '';
 	var $pconnect		= FALSE;
 	var $conn_id		= FALSE;
+	var $conn_type = TRUE; // 连接SAE的主从数据库标记 TRUE主库 FALSE从库
 	var $result_id		= FALSE;
 	var $db_debug		= FALSE;
 	var $benchmark		= 0;
@@ -450,10 +451,11 @@ class CI_DB_driver {
 	 */
 	function simple_query($sql)
 	{
-		if ( ! $this->conn_id)
+		$_is_write = $this->is_write_type($sql);
+		if ( ! $this->conn_id || ( ! $this->conn_type && $_is_write))
 		{
 			// SAE 读写分离 判断SQL语句类型
-			$_is_write = $this->is_write_type($sql);
+			$this->conn_type = $_is_write;
 			
 			// ----------------------------------------------------------------
 			
