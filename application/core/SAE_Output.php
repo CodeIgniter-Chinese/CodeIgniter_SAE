@@ -54,7 +54,7 @@ class SAE_Output extends CI_Output
          
         $cache_adapter->save($cache_key,$output,$this->cache_expiration * 60);
 		log_message('debug', "Cache output in ".$cach_model . '. key: ' . $cache_key);
-		echo "Cache output in ".$cach_model . '. key: ' . $cache_key;
+		//echo "Cache output in ".$cach_model . '. key: ' . $cache_key;
 	}
 
 	// --------------------------------------------------------------------
