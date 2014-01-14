@@ -253,7 +253,7 @@
 			写操作: s_write <br>
 			读操作: s_read<br>
 			删除操作: s_delete<br>
-			更多参考源码 application\helpers\storage_helper.php<br>
+			更多参考源码 application\helpers\storage_helper.php, 需自行扩展的请参考文档 <a href="http://apidoc.sinaapp.com/sae/SaeStorage.html" target="_blank">http://apidoc.sinaapp.com/sae/SaeStorage.html</a><br>
 			<br>
 			使用示例：
 			<code>
